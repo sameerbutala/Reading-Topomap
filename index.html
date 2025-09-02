@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="mr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>स्थलदर्शक नकाशाचे वाचन</title>
+<style>
+  body{font-family:Arial, sans-serif;margin:0;padding:0;background:#f9f9f9}
+  h1{text-align:center;color:red;font-size:20px}
+  h2{text-align:center;margin:10px 0}
+  .login-box{width:300px;margin:20px auto;background:#fff;padding:20px;border-radius:8px;box-shadow:0 0 8px #aaa}
+  .login-box label{display:block;margin:8px 0 4px}
+  .login-box input{width:100%;padding:6px;margin-bottom:10px;border:1px solid #ccc;border-radius:4px}
+  .login-box button{width:48%;padding:8px;margin:5px 1%;border:none;border-radius:6px;background:#007bff;color:#fff;font-weight:bold;cursor:pointer}
+  .login-box button:hover{background:#0056b3}
+  footer{text-align:center;font-size:14px;font-weight:bold;margin-top:10px}
+  #syllabus,#topicPage,#quizPage{display:none;padding:20px}
+  .topic{border:1px solid #ccc;padding:10px;margin:10px 0;border-radius:8px;background:#fff}
+  .topic h3{font-size:16px;margin:0 0 10px}
+  .go-btn{padding:6px 10px;background:#28a745;color:#fff;border:none;border-radius:6px;cursor:pointer}
+  .go-btn:hover{background:#1e7e34}
+  .home-btn{padding:8px 15px;margin:20px auto;display:block;background:#dc3545;color:#fff;border:none;border-radius:6px;cursor:pointer}
+  .home-btn:hover{background:#a71d2a}
+  .map-quiz{display:flex;gap:10px}
+  .map-container{flex:1;overflow:hidden;position:relative;border:1px solid #ccc}
+  .map-container img{width:100%;transition:transform 0.3s;cursor:grab}
+  .quiz-box{flex:1;padding:10px;border:1px solid #ccc;border-radius:8px;background:#fff}
+  .question{font-size:14px;margin-bottom:8px}
+  .options label{display:block;margin:5px 0}
+  .nav-btn{padding:5px 10px;margin:5px;border:none;border-radius:6px;cursor:pointer}
+  .nav-btn:hover{opacity:0.8}
+  .result{font-weight:bold;margin-top:10px}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="loginWrap">
+  <h1>स्थलदर्शक नकाशाचे वाचन</h1>
+  <div class="login-box">
+    <form id="loginForm" onsubmit="return false;">
+      <label>Name in Full:</label>
+      <input type="text" id="fullName" required>
+      <label>College Name:</label>
+      <input type="text" id="collegeName" required>
+      <label>College Address:</label>
+      <input type="text" id="collegeAddr" required>
+      <label>Email Address:</label>
+      <input type="email" id="email" required>
+      <label>Mobile No.:</label>
+      <input type="text" id="mobile" required>
+      <button type="button" onclick="doLogin()">SUBMIT</button>
+      <button type="button" id="exitBtn">EXIT</button>
+    </form>
+  </div>
+  <footer>Program is Created by Prof. Dr. Sameer A. Butala (9423379721)</footer>
+</div>
+
+<!-- SYLLABUS -->
+<div id="syllabus">
+  <h2>SYLLABUS</h2>
+  <div id="topicsList"></div>
+</div>
+
+<!-- TOPIC PAGE -->
+<div id="topicPage">
+  <h2 id="topicTitle"></h2>
+  <iframe id="pdfFrame" src="" width="100%" height="500px"></iframe>
+  <button class="home-btn" onclick="goHome()">Home</button>
+</div>
+
+<!-- QUIZ PAGE -->
+<div id="quizPage">
+  <h2>स्थलदर्शक नकाशाचे वाचन - Quiz</h2>
+  <div class="map-quiz">
+    <div class="map-container">
+      <img id="mapImage" src="" alt="Map">
+    </div>
+    <div class="quiz-box">
+      <div id="questionBox"></div>
+      <div class="options" id="optionsBox"></div>
+      <button class="nav-btn" onclick="checkAnswer()">Submit</button>
+      <button class="nav-btn" onclick="prevQuestion()">Back</button>
+      <button class="nav-btn" onclick="exitQuiz()">Exit</button>
+      <div class="result" id="resultBox"></div>
+    </div>
+  </div>
+  <button class="home-btn" onclick="goHome()">Home</button>
+</div>
+
+<script>
+const topics=[
+  {no:1,name:"Topic No. 01",file:"Topic No. 01..pdf"},
+  {no:2,name:"Topic No. 02",file:"Topic No. 02..pdf"},
+  {no:3,name:"Topic No. 03",file:"Topic No. 03..pdf"},
+  {no:4,name:"Topic No. 04",file:"Topic No. 04..pdf"},
+  {no:6,name:"Topic No. 06",file:"Topic No. 06..pdf"},
+  {no:7,name:"Topic No. 07",file:"Topic No. 07..pdf"},
+  {no:8,name:"Topic No. 08 - Maps & Quiz",quiz:true}
+];
+
+// login
+function doLogin(){
+  const f=document.getElementById("fullName").value.trim();
+  const c=document.getElementById("collegeName").value.trim();
+  const a=document.getElementById("collegeAddr").value.trim();
+  const em=document.getElementById("email").value.trim();
+  const m=document.getElementById("mobile").value.trim();
+  if(!f||!c||!a||!em||!m){alert("Please fill all fields!");return;}
+  document.getElementById("loginWrap").style.display="none";
+  document.getElementById("syllabus").style.display="block";
+  const list=document.getElementById("topicsList");
+  list.innerHTML="";
+  topics.forEach(t=>{
+    const div=document.createElement("div");
+    div.className="topic";
+    div.innerHTML=`<h3>${t.no}. ${t.name}</h3>
+      <button class="go-btn" onclick="openTopic(${t.no})">Go To</button>`;
+    list.appendChild(div);
+  });
+}
+document.getElementById("exitBtn").onclick=()=>{window.close();}
+
+// navigation
+function goHome(){
+  document.getElementById("topicPage").style.display="none";
+  document.getElementById("quizPage").style.display="none";
+  document.getElementById("syllabus").style.display="block";
+}
+function openTopic(no){
+  const t=topics.find(x=>x.no===no);
+  document.getElementById("syllabus").style.display="none";
+  if(t.quiz){
+    startQuiz();
+  } else {
+    document.getElementById("topicPage").style.display="block";
+    document.getElementById("topicTitle").innerText=t.name;
+    document.getElementById("pdfFrame").src=t.file;
+  }
+}
+
+// QUIZ
+let currentQ=0,score=0,mapIndex=0;
+const maps=["Map01.jpg","Map02.jpg"];
+const questions=[
+[
+{q:"०१) नकाशाचा क्रमांक कोणता आहे?",opts:["45/D/5","45/D/10","45/D/15","45/D/20"],ans:1},
+{q:"०२) नकाशाचे क्षेत्रफळ किती आहे?",opts:["26 चौ. कि.मी.","27 चौ. कि.मी.","170 चौ. कि.मी.","117 चौ. कि.मी."],ans:0},
+{q:"०३) नकाशाचा अक्षवृत्तीय व रेखावृत्तीय विस्तार कोणता आहे?",opts:["24°00’ ते 24°07’ उ. / 72°40’ ते 72°47’ पू.","24°40’ ते 24°45’ उ. / 72°40’ ते 72°45’ पू.","24°10’ ते 24°20’ उ. / 72°20’ ते 72°30’ पू.","23°40’ ते 23°45’ उ. / 71°40’ ते 71°45’ पू."],ans:1},
+{q:"०४) नकाशाचा सर्वसाधारण उतार कोणत्या दिशेकडे आहे?",opts:["पश्चिम ते पूर्व","उत्तर ते दक्षिण","पूर्व आग्नेय भागकडून पश्चिम–नैऋत्य भागाकडे","नैऋत्य ते ईशान्य"],ans:2},
+{q:"०५) नकाशातील सर्वसाधारण उंची किती आहे?",opts:["207 मीटर","307 मीटर","407 मीटर","507 मीटर"],ans:3},
+{q:"०६) नकाशातील मुख्य नद्या कोणत्या आहेत?",opts:["सबरमती व माही","सीपू व सूकळी","तापी व माही","साबरमती व बनास"],ans:1},
+{q:"०७) नकाशात दर्शविलेली जलप्रणाली कोणत्या प्रकारची आहे?",opts:["आयताकार","जाळीसदृश्य","वृक्षाकार","आरीय"],ans:2},
+{q:"०८) नदीतील गाळाचे स्वरूप कसे आहे?",opts:["दगडी व खडकाळ","लाल मातीप्रधान","सूक्ष्म वाळू–गाळ","काळी मातीप्रधान"],ans:2},
+{q:"०९) प्रमुख नदीप्रवाहाची लांबी किती आहे?",opts:["10 कि.मी.","12 कि.मी.","14 कि.मी.","16 कि.मी."],ans:3},
+{q:"१०) नकाशातील वाहतूक मार्गांचे प्रकार कोणते आहेत?",opts:["फक्त रेल्वेमार्ग","पक्के रस्ते, कच्चे रस्ते, कालवा","नद्या व जलमार्ग","राष्ट्रीय महामार्ग"],ans:1},
+{q:"११) नकाशातील वस्तीचा प्रकार कोणता आहे?",opts:["आरीय वस्ती","गोलाकार वस्ती","केंद्रीभूत/संकलित वस्ती व रेषीय वस्ती","चौरसाकृती वस्ती"],ans:2},
+{q:"१२) सनवारा वस्तीचा ६ अंकी निर्देशांक कोणता आहे?",opts:["264201","264205","264210","264215"],ans:1}
+],
+[
+{q:"०१) नकाशाचा क्रमांक कोणता आहे?",opts:["45/D/10","63/K/12","47/N/7","62/J/5"],ans:1},
+{q:"०२) नकाशाचे क्षेत्रफळ किती आहे?",opts:["25 चौ. कि.मी.","15 चौ. कि.मी.","26 चौ. कि.मी.","10 चौ. कि.मी."],ans:2},
+{q:"०३) नकाशाचा अक्षवृत्तीय व रेखावृत्तीय विस्तार कोणता आहे?",opts:["25°15' N ते 25°30' N, 82°35' E ते 82°40' E","25°00' N ते 25°15' N, 82°40' E ते 82°45' E","24°45' N ते 25°00' N, 82°30' E ते 82°35' E","25°10' N ते 25°20' N, 82°20' E ते 82°30' E"],ans:1},
+{q:"०४) नकाशाचा सर्वसाधारण उतार कोणत्या दिशेकडे आहे?",opts:["पश्चिमेकडे","उत्तरेकडे","उत्तर ते दक्षिण-पूर्व दिशेकडे","पूर्वेकडे"],ans:2},
+{q:"०५) नकाशातील सर्वसाधारण उंची किती आहे?",opts:["100 मीटर","125 मीटर","150 मीटर","175 मीटर"],ans:3},
+{q:"०६) नकाशातील मुख्य नद्या कोणत्या आहेत?",opts:["गंगा व गोमती","चतार व जोगीदरी","सोन व मंदाकिनी","कन्हेरी व उर्मिला"],ans:1},
+{q:"०७) नकाशात दर्शविलेली जलप्रणाली कोणत्या प्रकारची आहे?",opts:["समांतर जलप्रणाली","त्रिकोणी जलप्रणाली","वृषाकार जलप्रणाली","वलयाकार जलप्रणाली"],ans:2},
+{q:"०८) नदीतील गाळाचे स्वरूप कसे आहे?",opts:["मोठ्या दगडांचे","वालुकामय व गाळमय","खडी व गोटे प्रधान","मातीप्रधान"],ans:1},
+{q:"०९) प्रमुख नदीप्रवाहाची लांबी किती आहे?",opts:["५ किमी","८ किमी","१२ किमी","१५ किमी"],ans:2},
+{q:"१०) नकाशातील वाहतूक मार्गांचे प्रकार कोणते आहेत?",opts:["फक्त रेल्वेमार्ग","मुख्य रस्ता व रेल्वेमार्ग","मुख्य रस्ता, कच्चा रस्ता व रेल्वेमार्ग","फक्त कच्चे रस्ते"],ans:2},
+{q:"११) नकाशातील वस्तीचा प्रकार कोणता आहे?",opts:["एकत्रित वस्ती","विखूरलेली वस्ती","रेखीय वस्ती","तात्पुरती वस्ती"],ans:1},
+{q:"१२) CHANDLEWA वस्तीचा ६ अंकी निर्देशांक कोणता आहे?",opts:["927814","937826","947816","917824"],ans:1}
+]
+];
+function startQuiz(){
+  mapIndex=0;currentQ=0;score=0;
+  document.getElementById("quizPage").style.display="block";
+  loadQuestion();
+}
+function loadQuestion(){
+  document.getElementById("mapImage").src=maps[mapIndex];
+  const q=questions[mapIndex][currentQ];
+  document.getElementById("questionBox").innerText=q.q;
+  const optBox=document.getElementById("optionsBox");
+  optBox.innerHTML="";
+  q.opts.forEach((o,i)=>{
+    optBox.innerHTML+=`<label><input type="radio" name="opt" value="${i}"> ${o}</label>`;
+  });
+  document.getElementById("resultBox").innerText="";
+}
+function checkAnswer(){
+  const q=questions[mapIndex][currentQ];
+  const sel=document.querySelector('input[name="opt"]:checked');
+  if(!sel){alert("उत्तर निवडा!");return;}
+  const ans=parseInt(sel.value);
+  if(ans===q.ans){score++;document.getElementById("resultBox").innerText="बरोबर";}
+  else{document.getElementById("resultBox").innerText="चूक";}
+  setTimeout(()=>{
+    currentQ++;
+    if(currentQ<questions[mapIndex].length){loadQuestion();}
+    else if(mapIndex<maps.length-1){mapIndex++;currentQ=0;loadQuestion();}
+    else{document.getElementById("resultBox").innerText=`Quiz संपले. गुण: ${score}/${questions[0].length+questions[1].length}`;}
+  },800);
+}
+function prevQuestion(){
+  if(currentQ>0){currentQ--;loadQuestion();}
+}
+function exitQuiz(){
+  goHome();
+}
+
+// MAP zoom & pan
+const map=document.getElementById("mapImage");
+let scale=1,posX=0,posY=0,isDown=false,startX,startY;
+map.addEventListener("wheel",e=>{
+  e.preventDefault();
+  if(e.deltaY<0){scale*=1.1;}else{scale/=1.1;}
+  map.style.transform=`translate(${posX}px,${posY}px) scale(${scale})`;
+});
+map.addEventListener("mousedown",e=>{isDown=true;startX=e.clientX-posX;startY=e.clientY-posY;});
+map.addEventListener("mouseup",()=>{isDown=false;});
+map.addEventListener("mousemove",e=>{
+  if(isDown){posX=e.clientX-startX;posY=e.clientY-startY;
+    map.style.transform=`translate(${posX}px,${posY}px) scale(${scale})`;
+  }
+});
+</script>
+</body>
+</html>
